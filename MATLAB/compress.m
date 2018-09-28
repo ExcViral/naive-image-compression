@@ -1,21 +1,31 @@
 clc;
 clear all;
 
-% input image
+% Enter the input image here
 I = imread('');
 figure("Name","Input Image"); imshow(I);
 
-% SVD decomposition of input image
-[U,S,V] = svd(double(I));
+% Compress the image, input image, and compression level
+c_I = compresss(I, 200);
+figure("Name","Compressed Image"); imshow(c_I);
 
-% algorithm of image compression
-img_size = size(I);
-new_S = S;
-compression_level = 200;
-for k=0:compression_level
-   new_S(img_size(1)-k,img_size(2)-k) = 0;
+% function to compress input image I
+function compressed_img = compresss(I, compression_level)
+    % SVD decomposition of input image
+    [U,Sigma,V] = svd(double(I));
+    new_S = trim_sigma(Sigma, compression_level);
+    compressed_img = reconstruct(U, new_S, V);
 end
 
-% reconstruction of image
-new_I = uint8(U*new_S*V');
-figure("Name","Compressed Image"); imshow(new_I);
+% function to trim n+1 lower order eigen values
+function new_sigma = trim_sigma(sigma, compression_level)
+    new_sigma = sigma;
+    for k=0:compression_level
+        new_sigma(size(sigma,1)-k,size(sigma,2)-k) = 0;
+    end 
+end
+
+% function to reconstruct the image after compression
+function reconstructed_Image = reconstruct(U, Sigma, V)
+    reconstructed_Image = uint8(U*Sigma*V');
+end
